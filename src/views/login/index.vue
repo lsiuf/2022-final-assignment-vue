@@ -41,6 +41,11 @@
         </span>
       </el-form-item>
 
+      <el-radio-group v-model="loginForm.role" style="width:100%;margin-bottom:30px;">
+        <el-radio-button label="user">读者</el-radio-button>
+        <el-radio-button label="admin">管理员</el-radio-button>
+      </el-radio-group>
+
       <el-button :loading="loading" type="primary" style="width:100%;margin-bottom:30px;" @click.native.prevent="handleLogin">登录</el-button>
 
     </el-form>
@@ -55,7 +60,8 @@ export default {
     return {
       loginForm: {
         username: '',
-        password: ''
+        password: '',
+        role: 'user'
       },
       loginRules: {
         username: [{ required: true, message: '请输入用户名', trigger: 'blur' }],

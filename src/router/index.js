@@ -55,15 +55,20 @@ export const constantRoutes = [
     }]
   },
 
+]
+
+export const asyncRoutes = [
+
   {
     path: '/borrow',
     component: Layout,
+    meta: { roles: ['user'] },
     children: [
       {
         path: 'index',
         name: 'Borrow',
         component: () => import('@/views/borrow/index'),
-        meta: { title: '图书借阅系统', icon: 'example' }
+        meta: {  title: '图书借阅系统', icon: 'example' }
       }
     ]
   },
@@ -71,12 +76,13 @@ export const constantRoutes = [
   {
     path: '/borrowList',
     component: Layout,
+    meta: { roles: ['admin'] },
     children: [
       {
         path: 'index',
         name: 'BorrowList',
         component: () => import('@/views/borrow-list/index'),
-        meta: { title: '借阅信息管理', icon: 'form' }
+        meta: { roles: ['admin'], title: '借阅信息管理', icon: 'form' }
       }
     ]
   },
@@ -84,12 +90,13 @@ export const constantRoutes = [
   {
     path: '/book',
     component: Layout,
+    meta: { roles: ['admin'] },
     children: [
       {
         path: 'index',
         name: 'Book',
         component: () => import('@/views/book/index'),
-        meta: { title: '书籍信息管理', icon: 'nested' }
+        meta: { roles: ['admin'], title: '书籍信息管理', icon: 'nested' }
       }
     ]
   },
@@ -97,12 +104,13 @@ export const constantRoutes = [
   {
     path: '/category',
     component: Layout,
+    meta: { roles: ['admin'] },
     children: [
       {
         path: 'index',
         name: 'Category',
         component: () => import('@/views/category/index'),
-        meta: { title: '书籍分类管理', icon: 'tree' }
+        meta: { roles: ['admin'], title: '书籍分类管理', icon: 'tree' }
       }
     ]
   },
@@ -110,12 +118,13 @@ export const constantRoutes = [
   {
     path: '/reader',
     component: Layout,
+    meta: { roles: ['admin'] },
     children: [
       {
         path: 'index',
         name: 'Reader',
         component: () => import('@/views/reader/index'),
-        meta: { title: '读者信息管理', icon: 'user' }
+        meta: { roles: ['admin'], title: '读者信息管理', icon: 'user' }
       }
     ]
   },
@@ -123,19 +132,20 @@ export const constantRoutes = [
   {
     path: '/uadmin',
     component: Layout,
+    meta: { roles: ['admin'] },
     children: [
       {
         path: 'index',
         name: 'Uadmin',
         component: () => import('@/views/uadmin/index'),
-        meta: { title: '管理员信息', icon: 'password' }
+        meta: { roles: ['admin'], title: '管理员信息', icon: 'password' }
       }
     ]
   },
 
   // 404 page must be placed at the end !!!
   { path: '*', redirect: '/404', hidden: true }
-]
+];
 
 const createRouter = () => new Router({
   // mode: 'history', // require service support
