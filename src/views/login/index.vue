@@ -41,18 +41,54 @@
         </span>
       </el-form-item>
 
-      <el-radio-group v-model="loginForm.role" style="width:100%;margin-bottom:30px;">
-        <el-radio-button label="user">读者</el-radio-button>
-        <el-radio-button label="admin">管理员</el-radio-button>
-      </el-radio-group>
-
       <el-button :loading="loading" type="primary" style="width:100%;margin-bottom:30px;" @click.native.prevent="handleLogin">登录</el-button>
 
+      <el-row :gutter="20">
+        <el-col :span="4"><el-radio v-model="loginForm.role" label="user">读者</el-radio></el-col>
+        <el-col :span="4"><el-radio v-model="loginForm.role" label="admin">管理员</el-radio></el-col>
+        <el-col :span="4" :offset="8"><el-link type="success" @click.native.prevent="showRegister">读者注册</el-link></el-col>
+        <el-col :span="4"><el-link>忘记密码</el-link></el-col>
+      </el-row>
     </el-form>
+
+    <div>
+
+    </div>
+    <el-dialog title="注册读者" :visible.sync="dialogFormVisible" class="dialog-container">
+      <el-form ref="registerForm" :model="registerForm" :rules="registerRules" label-position="left">
+        <el-form-item label="姓名" prop="name" :label-width="formLabelWidth">
+          <el-input v-model="registerForm.name" placeholder="请输入姓名"></el-input>
+        </el-form-item>
+        <el-form-item label="身份ID" prop="number" :label-width="formLabelWidth">
+          <el-input v-model="registerForm.number" placeholder="请输入游客身份证号/学生号/教师号"></el-input>
+        </el-form-item>
+        <el-form-item label="手机号" prop="phone" :label-width="formLabelWidth">
+          <el-input v-model="registerForm.phone" placeholder="请输入手机号"></el-input>
+        </el-form-item>
+        <el-form-item label="登录密码" prop="password" :label-width="formLabelWidth">
+          <el-input v-model="registerForm.password" placeholder="请输入登录密码"></el-input>
+        </el-form-item>
+        <el-form-item label="性别" prop="sex" :label-width="formLabelWidth">
+          <el-radio v-model="registerForm.sex" label="1">男</el-radio>
+          <el-radio v-model="registerForm.sex" label="2">女</el-radio>
+        </el-form-item>
+        <el-form-item label="读者类别" prop="category" :label-width="formLabelWidth">
+          <el-radio v-model="registerForm.category" label="0">游客</el-radio>
+          <el-radio v-model="registerForm.category" label="1">学生</el-radio>
+          <el-radio v-model="registerForm.category" label="2">教师</el-radio>
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button :loading="loading" @click="closeRegister">取 消</el-button>
+        <el-button :loading="loading" type="primary" @click="handleRegister">确 定</el-button>
+      </div>
+    </el-dialog>
+
   </div>
 </template>
 
 <script>
+import { register } from '@/api/reader'
 
 export default {
   name: 'Login',
@@ -69,7 +105,23 @@ export default {
       },
       loading: false,
       passwordType: 'password',
-      redirect: undefined
+      redirect: undefined,
+      dialogFormVisible: false,
+      formLabelWidth: '120px',
+      registerForm: {
+          name: '',
+          number: '',
+          password: '',
+          phone: '',
+          sex: '1',
+          category: '0'
+        },
+      registerRules: {
+        name: [{ required: true, message: '请输入姓名', trigger: 'blur' }],
+        number: [{ required: true, message: '请输入游客身份证号/学生号/教师号', trigger: 'blur' }],
+        phone: [{ required: true, message: '请输入手机号', trigger: 'blur' }],
+        password: [{ required: true, message: '请输入登录密码', trigger: 'blur' }]
+      },
     }
   },
   watch: {
@@ -106,10 +158,68 @@ export default {
           return false
         }
       })
-    }
+    },
+    showRegister() {
+      this.dialogFormVisible = true
+    },
+    closeRegister() {
+      this.dialogFormVisible = false
+      this.registerForm.name = ''
+      this.registerForm.number = ''
+      this.registerForm.password = ''
+      this.registerForm.phone = ''
+      this.registerForm.sex = '1'
+      this.registerForm.category = '0'
+    },
+    handleRegister() {
+      this.$refs.registerForm.validate(valid => {
+        if(valid) {
+          this.loading = true
+          register(this.registerForm).then(response => {
+            this.$message({message: '注册成功',type:'success'})
+            this.loading = false
+            this.dialogFormVisible = false
+          }).catch(err => {
+            this.loading = false
+          })
+        }
+      })
+    },
   }
 }
 </script>
+
+<style lang="scss">
+.login-container {
+  .dialog-container {
+    .el-input {
+      width: 300px;
+
+      input {
+        background: initial;
+        border-radius: 4px;
+        border: 1px solid #dcdfe6;
+        box-sizing: border-box;
+        padding: 0 15px;
+        color: #606266;
+        display: inline-block;
+        font-size: inherit;
+        height: 40px;
+        line-height: 40px;
+        caret-color: initial;
+        width: 100%;
+      }
+    }
+  
+    .el-form-item {
+      border: initial;
+      background: initial;
+      border-radius: initial;
+      color: initial;
+    }
+  }
+}
+</style>
 
 <style lang="scss">
 /* 修复input 背景不协调 和光标变色 */

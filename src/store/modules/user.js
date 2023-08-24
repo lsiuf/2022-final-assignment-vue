@@ -1,6 +1,6 @@
 // import { login, loginout, getInfo } from '@/api/user'
 import { login, loginout, getInfo } from '@/api/login'
-import { getToken, setToken, removeToken } from '@/utils/auth'
+import { getToken, setToken, removeToken, getRole, setRole } from '@/utils/auth'
 import { resetRouter } from '@/router'
 import userHead from '@/assets/user_head.png'
 
@@ -38,10 +38,11 @@ const actions = {
   login({ commit }, userInfo) {
     const { username, password, role } = userInfo
     return new Promise((resolve, reject) => {
-      login({ username: username.trim(), password: password }).then(response => {
+      login({ username: username.trim(), password: password }, role ).then(response => {
         const { data } = response
         commit('SET_TOKEN', data.token)
         setToken(data.token)
+        setRole(role)
         resolve()
       }).catch(error => {
         reject(error)
@@ -52,14 +53,15 @@ const actions = {
   // get user info
   getInfo({ commit, state }) {
     return new Promise((resolve, reject) => {
-      getInfo(state.token).then(response => {
+      let role = getRole();
+      getInfo(role).then(response => {
         const { data } = response
 
         if (!data) {
           return reject('Verification failed, please Login again.')
         }
 
-        const roles = ['admin']
+        const roles = [role]
         data.roles = roles
         commit('SET_ROLES', roles)
         commit('SET_NAME', data.username)
@@ -74,7 +76,7 @@ const actions = {
   // user logout
   logout({ commit, state }) {
     return new Promise((resolve, reject) => {
-      loginout().then((res) => {
+      loginout(getRole()).then((res) => {
         removeToken() // must remove  token  first
         resetRouter()
         commit('RESET_STATE')

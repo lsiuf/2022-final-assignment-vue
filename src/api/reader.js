@@ -32,3 +32,10 @@ export function deleteReader(id) {
   })
 }
 
+export function register(dat) {
+  return request({
+    url: '/reader/register',
+    method: 'post',
+    data: dat
+  })
+}

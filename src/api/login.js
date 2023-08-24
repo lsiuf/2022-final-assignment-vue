@@ -1,23 +1,34 @@
 import request from '@/utils/request'
 
-export function login(query) {
+export function login(query, role) {
   return request({
-    url: '/uadmin/login',
+    url: getUrlByRole(role, 'login'),
     method: 'get',
     params: query
   })
 }
 
-export function loginout() {
+export function loginout(role) {
   return request({
-    url: '/uadmin/loginout',
+    url: getUrlByRole(role, 'loginout'),
     method: 'get'
   })
 }
 
-export function getInfo() {
+export function getInfo(role) {
   return request({
-    url: '/uadmin/getLoginInfo',
+    url: getUrlByRole(role, 'getLoginInfo'),
     method: 'get'
   })
+}
+
+function getUrlByRole(role, url) {
+  let pre
+  if(role == 'user') {
+    pre = '/reader/'
+  }
+  if(role == 'admin') {
+    pre = '/uadmin/'
+  }
+  return pre + url
 }

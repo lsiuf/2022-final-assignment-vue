@@ -21,3 +21,11 @@ export function getJWT(){
 export function setJWT(jwt){
   window.localStorage.setItem("jwt",jwt)
 }
+
+export function getRole(){
+  return window.localStorage.getItem("role")
+}
+
+export function setRole(role){
+  window.localStorage.setItem("role",role)
+}
