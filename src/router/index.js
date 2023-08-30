@@ -57,8 +57,9 @@ export const constantRoutes = [
 
 ]
 
+// 动态渲染路由，根据roles权限显示
 export const asyncRoutes = [
-
+  //读者权限
   {
     path: '/borrow',
     component: Layout,
@@ -68,11 +69,38 @@ export const asyncRoutes = [
         path: 'index',
         name: 'Borrow',
         component: () => import('@/views/borrow/index'),
-        meta: {  title: '图书借阅系统', icon: 'example' }
+        meta: {  title: '藏书', icon: 'example' }
+      }
+    ]
+  },
+  {
+    path: '/readerBorrow',
+    component: Layout,
+    meta: { roles: ['user'] },
+    children: [
+      {
+        path: 'index',
+        name: 'ReaderBorrow',
+        component: () => import('@/views/reader_borrow/index'),
+        meta: {  title: '借阅订单', icon: 'example' }
+      }
+    ]
+  },
+  {
+    path: '/readerInfo',
+    component: Layout,
+    meta: { roles: ['user'] },
+    children: [
+      {
+        path: 'index',
+        name: 'ReaderInfo',
+        component: () => import('@/views/reader_info/index'),
+        meta: {  title: '个人信息', icon: 'example' }
       }
     ]
   },
 
+  //管理员权限
   {
     path: '/borrowList',
     component: Layout,
@@ -82,7 +110,7 @@ export const asyncRoutes = [
         path: 'index',
         name: 'BorrowList',
         component: () => import('@/views/borrow-list/index'),
-        meta: { roles: ['admin'], title: '借阅信息管理', icon: 'form' }
+        meta: { title: '借阅信息管理', icon: 'form' }
       }
     ]
   },
@@ -96,7 +124,7 @@ export const asyncRoutes = [
         path: 'index',
         name: 'Book',
         component: () => import('@/views/book/index'),
-        meta: { roles: ['admin'], title: '书籍信息管理', icon: 'nested' }
+        meta: { title: '书籍信息管理', icon: 'nested' }
       }
     ]
   },
@@ -110,7 +138,7 @@ export const asyncRoutes = [
         path: 'index',
         name: 'Category',
         component: () => import('@/views/category/index'),
-        meta: { roles: ['admin'], title: '书籍分类管理', icon: 'tree' }
+        meta: { title: '书籍分类管理', icon: 'tree' }
       }
     ]
   },
@@ -124,7 +152,7 @@ export const asyncRoutes = [
         path: 'index',
         name: 'Reader',
         component: () => import('@/views/reader/index'),
-        meta: { roles: ['admin'], title: '读者信息管理', icon: 'user' }
+        meta: { title: '读者信息管理', icon: 'user' }
       }
     ]
   },
@@ -138,7 +166,7 @@ export const asyncRoutes = [
         path: 'index',
         name: 'Uadmin',
         component: () => import('@/views/uadmin/index'),
-        meta: { roles: ['admin'], title: '管理员信息', icon: 'password' }
+        meta: { title: '管理员信息', icon: 'password' }
       }
     ]
   },

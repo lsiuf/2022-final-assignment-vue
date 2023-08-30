@@ -24,9 +24,18 @@
       fit
       highlight-current-row
     >
-      <el-table-column label="书名" width="200">
+      <el-table-column label="封面">
         <template slot-scope="scope">
-          {{'《'+scope.row.name+'》'}}
+            <el-image 
+              style="width: 65px;"
+              :src="getBookImg(scope.row.img)" 
+              :preview-src-list="[getBookImg(scope.row.img)]">
+            </el-image>
+        </template>
+      </el-table-column>
+      <el-table-column label="书名">
+        <template slot-scope="scope">
+          {{ scope.row.name }}
         </template>
       </el-table-column>
       <el-table-column label="作者" align="center">
@@ -34,11 +43,11 @@
           <span>{{ scope.row.author }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="简介" width="110" align="center">
+      <!-- <el-table-column label="简介" width="110" align="center">
         <template slot-scope="scope">
           {{ scope.row.summary }}
         </template>
-      </el-table-column>
+      </el-table-column> -->
       <el-table-column label="单价" align="center">
         <template slot-scope="scope">
           {{ scope.row.price }}
@@ -64,15 +73,19 @@
           {{ parseTime(scope.row.createTime) }}
         </template>
       </el-table-column>
-      <el-table-column align="center" label="操作" width="200">
+      <el-table-column align="center" label="操作" width="150">
         <template slot-scope="scope">
-          <el-button v-if="(scope.row.stock > 0 && scope.row.status == 1)" @click="onBorrow(scope.row)" size="small" type="primary">借阅</el-button>
+          <el-button @click="onInfo(scope.row)" size="small" type="primary">详情</el-button>
+          <el-button v-if="(scope.row.stock > 0 && scope.row.status == 1)" @click="onBorrow(scope.row)" size="small" type="success">借阅</el-button>
         </template>
       </el-table-column>
     </el-table>
 
-    <el-dialog title="图书借阅" :visible.sync="dialogFormVisible">
-      <el-form ref="dataForm" :rules="rules" :model="temp" v-loading="dialogLoading" label-position="left" label-width="90px" style="width: 400px; margin-left:50px;">
+    <el-dialog :title="dialogType === 'borrow' ? '图书借阅信息确认' : '图书信息'" :visible.sync="dialogFormVisible">
+      <el-form ref="dataForm" :rules="rules" :model="temp" v-loading="dialogLoading" label-position="left" label-width="100px" style="width: 400px; margin-left:50px;">
+        <el-form-item label="封面" prop="img">
+            <img :src="getBookImg(temp.img)" class="avatar">
+        </el-form-item>
         <el-form-item label="书名">
           <el-input v-model="temp.name" :disabled="true"/>
         </el-form-item>
@@ -82,19 +95,36 @@
         <el-form-item label="简介">
           <el-input v-model="temp.summary" type="textarea" :disabled="true"/>
         </el-form-item>
-        <el-form-item label="库存">
+        <el-form-item label="出版社" prop="publishing">
+          <el-input v-model="temp.publishing" :disabled="true"/>
+        </el-form-item>
+        <el-form-item label="ISBN编码" prop="isbnCode">
+          <el-input v-model="temp.isbnCode" :disabled="true"/>
+        </el-form-item>
+        <el-form-item label="单价" prop="price">
+          <el-input v-model="temp.price" :disabled="true"/>
+        </el-form-item>
+        <el-form-item label="库存" :disabled="true">
           <el-input v-model="temp.stock" :disabled="true"/>
         </el-form-item>
-        <el-form-item label="读者卡号" prop="readerNumber">
-          <el-input v-model="temp.readerNumber" />
+        <el-form-item label="分类" prop="categoryId">
+          <el-select v-model="temp.categoryId" class="filter-item" placeholder="请选择书籍分类" :disabled="true">
+            <el-option v-for="item in categorys" :key="item.id" :label="item.name" :value="item.id" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="借出日期" v-if="dialogType === 'borrow'">
+          <el-input v-model="temp.startTime" :disabled="true"/>
+        </el-form-item>
+        <el-form-item label="预估归还日期" v-if="dialogType == 'borrow'">
+          <el-input v-model="temp.endTime" :disabled="true"/>
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
         <el-button @click="dialogFormVisible = false">
           取消
         </el-button>
-        <el-button type="primary" @click="bookBorrow">
-          提交
+        <el-button type="primary" @click="bookBorrow"  v-if="dialogType == 'borrow'">
+          确认
         </el-button>
       </div>
     </el-dialog>
@@ -106,6 +136,8 @@ import { listBook, } from '@/api/book'
 import { listCategory } from '@/api/category'
 import { bookBorrow } from '@/api/borrow'
 import { parseTime } from '@/utils'
+import { getBorrowPeriod } from '@/api/configinfo'
+import { bookImgUrl } from '@/api/upload'
 
 export default {
   filters: {
@@ -126,6 +158,7 @@ export default {
   },
   data() {
     return {
+      dialogType: 'info',
       list: [],
       listParams:{
         name: '',
@@ -142,7 +175,14 @@ export default {
         author: '',
         summary: '',
         stock: 0,
-        readerNumber: ''
+        readerNumber: '',
+        startTime: '',
+        endTime: '',
+        img: '',
+        publishing: '',
+        categoryId: '',
+        isbnCode: '',
+        price: 0,
       },
       categorys:[],
       statusOptions:[{
@@ -177,6 +217,10 @@ export default {
     listCategory() {
       listCategory().then(res => {
         this.categorys = res.data
+        let categorys = this.categorys
+        for(let i=0; i<categorys.length; i++){
+          categorys[i].id = Number(categorys[i].id)
+        }
       })
     },
     categoryFilter(categoryId){
@@ -203,20 +247,43 @@ export default {
       this.fetchData()
     },
     onBorrow(row){
+      this.dialogType = 'borrow'
       this.dialogFormVisible = true
       this.temp.id = row.id
       this.temp.name = row.name
       this.temp.author = row.author
       this.temp.summary = row.summary
+      this.temp.publishing = row.publishing
+      this.temp.img = row.img
       this.temp.stock = row.stock
-      this.temp.readerNumber = ''
+      this.temp.categoryId = row.categoryId
+      this.temp.price = row.price
+      this.temp.isbnCode = row.isbnCode
+      this.temp.startTime = ''
+      this.temp.endTime = ''
+      this.getBorrowPeriod();
+    },
+    onInfo(row) {
+      this.dialogType = 'info'
+      this.dialogFormVisible = true
+      this.temp.id = row.id
+      this.temp.name = row.name
+      this.temp.author = row.author
+      this.temp.summary = row.summary
+      this.temp.publishing = row.publishing
+      this.temp.img = row.img
+      this.temp.stock = row.stock
+      this.temp.categoryId = row.categoryId
+      this.temp.price = row.price
+      this.temp.isbnCode = row.isbnCode
+      this.temp.startTime = ''
+      this.temp.endTime = ''
     },
     bookBorrow(){
       this.$refs['dataForm'].validate(valid => {
         if(valid){
           let param = {
-            bookId: this.temp.id,
-            readerNumber: this.temp.readerNumber
+            bookId: this.temp.id
           }
           this.dialogLoading = true
           bookBorrow(param).then(res => {
@@ -229,7 +296,23 @@ export default {
           })
         }
       })
+    },
+    getBorrowPeriod(){
+      getBorrowPeriod().then(res => {
+        this.temp.startTime = this.parseTime(res.data.startTime)
+        this.temp.endTime = this.parseTime(res.data.endTime)
+      })
+    },
+    getBookImg(img) {
+      return bookImgUrl + img
     }
   }
 }
 </script>
+
+<style>
+  .avatar {
+    width: 178px;
+    display: block;
+  }
+</style>

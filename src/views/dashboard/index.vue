@@ -1,6 +1,6 @@
 <template>
   <div class="dashboard-container">
-    <div class="dashboard-text">管理员{{ name }}，欢迎进入韩山师范学院图书管理系统！</div>
+    <div class="dashboard-text"> {{ name }} ，欢迎使用韩山师范学院图书管理系统！</div>
   </div>
 </template>
 

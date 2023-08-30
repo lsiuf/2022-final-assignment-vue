@@ -8,6 +8,13 @@ export function listReader(query) {
   })
 }
 
+export function getReader() {
+  return request({
+    url: '/reader/getReader',
+    method: 'get'
+  })
+}
+
 export function insertReader(dat) {
   return request({
     url: '/reader/save',

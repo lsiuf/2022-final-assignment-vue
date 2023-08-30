@@ -16,10 +16,25 @@ export function bookReturn(id) {
   })
 }
 
+export function bookReturnByReader(id) {
+  return request({
+    url: '/borrow/bookReturnByReader',
+    method: 'get',
+    params: {id:id}
+  })
+}
+
 export function listBorrow(query) {
   return request({
     url: '/borrow/list',
     method: 'get',
     params: query
+  })
+}
+
+export function listByReader() {
+  return request({
+    url: '/borrow/listByReader',
+    method: 'get'
   })
 }

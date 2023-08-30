@@ -32,6 +32,15 @@
       fit
       highlight-current-row
     >
+      <el-table-column label="封面">
+        <template slot-scope="scope">
+          <el-image 
+          style="width: 65px"
+          :src="getBookImg(scope.row.img)" 
+          :preview-src-list="[getBookImg(scope.row.img)]">
+        </el-image>
+        </template>
+      </el-table-column>
       <el-table-column label="书名">
         <template slot-scope="scope">
           {{ scope.row.name }}
@@ -42,21 +51,21 @@
           <span>{{ scope.row.author }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="简介" width="110" align="center">
+      <!-- <el-table-column label="简介" width="110" align="center">
         <template slot-scope="scope">
           {{ scope.row.summary }}
         </template>
-      </el-table-column>
+      </el-table-column> -->
       <el-table-column label="分类" align="center">
         <template slot-scope="scope">
           {{ categoryFilter(scope.row.categoryId) }}
         </template>
       </el-table-column>
-      <el-table-column label="ISBN编码" align="center">
+      <!-- <el-table-column label="ISBN编码" align="center">
         <template slot-scope="scope">
           {{ scope.row.isbnCode }}
         </template>
-      </el-table-column>
+      </el-table-column> -->
       <el-table-column label="单价" align="center">
         <template slot-scope="scope">
           {{ scope.row.price }}
@@ -85,13 +94,33 @@
       <el-table-column align="center" label="操作" width="200">
         <template slot-scope="scope">
           <el-button @click="onUpdate(scope.row)" size="small" icon="el-icon-edit" type="warning">修改</el-button>
-          <el-button @click="onDelete(scope.row.id)" size="small" icon="el-icon-delete" type="danger">删除</el-button>
+          <el-popover
+            placement="top">
+            <p>确定删除《{{ scope.row.name }}》的书籍信息？</p>
+            <div style="text-align: right; margin: 0">
+              <el-button size="mini" type="text" @click="deleteVisible = false">取消</el-button>
+              <el-button type="primary" size="mini" @click="onDelete(scope.row.id)">确定</el-button>
+            </div>
+            <el-button slot="reference" size="small" icon="el-icon-delete" type="danger">删除</el-button>
+          </el-popover>
+          <!-- <el-button @click="onDelete(scope.row.id)" >删除</el-button> -->
         </template>
       </el-table-column>
     </el-table>
 
     <el-dialog :title="textMap[dialogStatus]" :visible.sync="dialogFormVisible">
       <el-form ref="dataForm" :rules="rules" :model="temp" v-loading="dialogLoading" label-position="left" label-width="90px" style="width: 400px; margin-left:50px;">
+        <el-form-item label="封面" prop="img">
+          <el-upload
+            class="avatar-uploader"
+            action="1"
+            :before-upload="beforeUpload"
+            :show-file-list="false"
+            :on-success="handleAvatarSuccess">
+            <img v-if="temp.img" :src="getBookImg(temp.img)" class="avatar">
+            <i v-else class="el-icon-plus avatar-uploader-icon"></i>
+          </el-upload>
+        </el-form-item>
         <el-form-item label="书名" prop="name">
           <el-input v-model="temp.name" />
         </el-form-item>
@@ -100,6 +129,9 @@
         </el-form-item>
         <el-form-item label="简介" prop="summary">
           <el-input v-model="temp.summary" :autosize="{ minRows: 2, maxRows: 4}" type="textarea" placeholder="请输入简介" />
+        </el-form-item>
+        <el-form-item label="出版社" prop="publishing">
+          <el-input v-model="temp.publishing" />
         </el-form-item>
         <el-form-item label="ISBN编码" prop="isbnCode">
           <el-input v-model="temp.isbnCode" />
@@ -140,6 +172,7 @@
 import { listBook, insertBook, updateBook ,deleteBook } from '@/api/book'
 import { listCategory } from '@/api/category'
 import { parseTime } from '@/utils'
+import { uploadBookImg, bookImgUrl } from '@/api/upload'
 
 export default {
   filters: {
@@ -160,6 +193,7 @@ export default {
   },
   data() {
     return {
+      deleteVisible: false,
       list: [],
       listParams:{
         name: '',
@@ -180,12 +214,14 @@ export default {
         name: '',
         author: '',
         summary: '',
+        publishing: '',
         categoryId: '',
         isbnCode: '',
         price: 0,
         stock: 0,
         status: 1,
-        sort: 0
+        sort: 0,
+        img: '',
       },
       categorys:[],
       statusOptions:[{
@@ -199,10 +235,11 @@ export default {
         name: [{ required: true, message: '请输入书名', trigger: 'change' }],
         author: [{ required: true, message: '请输入作者', trigger: 'change' }],
         summary: [{ required: true, message: '请输入简介', trigger: 'change' }],
-        isbnCode: [{ required: true, message: '请输入ISBN编码', trigger: 'change' }],
-        price: [{ required: true, message: '请输入单价', trigger: 'change' }],
-        stock: [{ required: true, message: '请输入库存', trigger: 'change' }]
-      },
+        // isbnCode: [{ required: true, message: '请输入ISBN编码', trigger: 'change' }],
+        // price: [{ required: true, message: '请输入单价', trigger: 'change' }],
+        stock: [{ required: true, message: '请输入库存', trigger: 'change' }],
+        img: [{ required: true, message: '请上传图书封面', trigger: 'change' }],
+      }
     }
   },
   created() {
@@ -226,18 +263,25 @@ export default {
     listCategory() {
       listCategory().then(res => {
         this.categorys = res.data
+        let categorys = this.categorys
+        for(let i=0; i<categorys.length; i++){
+          categorys[i].id = Number(categorys[i].id)
+        }
       })
     },
     categoryFilter(categoryId){
       let categorys = this.categorys
       if(categorys && categorys.length > 0){
         for(let i=0; i<categorys.length; i++){
-          if(categorys[i].id == categoryId){
+          if(categorys[i].id === categoryId){
             return categorys[i].name
           }
         }
       }
       return '无'
+    },
+    handleAvatarSuccess(res, file) {
+        this.imageUrl = URL.createObjectURL(file.raw);
     },
     onRefresh() {
       this.fetchData()
@@ -262,7 +306,8 @@ export default {
         price: 0,
         stock: 0,
         status: 1,
-        sort: 0
+        sort: 0,
+        img: ''
       }
       this.dialogStatus = 'insert'
       this.dialogFormVisible = true
@@ -275,9 +320,11 @@ export default {
     onDelete(id) {
       this.listLoading = true
       deleteBook(id).then(res => {
+        this.deleteVisible = false
         this.$message({message: '操作成功',type:'success'})
         this.onRefresh()
       }).catch(err => {
+        this.deleteVisible = false
         this.listLoading = false
       })
     },
@@ -310,7 +357,45 @@ export default {
           });
         }
       })
+    },
+    beforeUpload(file) {
+      let formDat = new FormData()
+      formDat.append("file", file)
+      uploadBookImg(formDat).then(res => {
+        this.temp.img = res.data
+      }).catch(err => {
+        console.log(err)
+      })
+      return false
+    },
+    getBookImg(img) {
+      return bookImgUrl + img
     }
   }
 }
 </script>
+
+<style>
+  .avatar-uploader .el-upload {
+    border: 1px dashed #d9d9d9;
+    border-radius: 6px;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+  }
+  .avatar-uploader .el-upload:hover {
+    border-color: #409EFF;
+  }
+  .avatar-uploader-icon {
+    font-size: 28px;
+    color: #8c939d;
+    width: 178px;
+    height: 178px;
+    line-height: 178px;
+    text-align: center;
+  }
+  .avatar {
+    width: 178px;
+    display: block;
+  }
+</style>
