@@ -48,9 +48,9 @@
           {{ scope.row.summary }}
         </template>
       </el-table-column> -->
-      <el-table-column label="单价" align="center">
+      <el-table-column label="出版社" align="center">
         <template slot-scope="scope">
-          {{ scope.row.price }}
+          {{ scope.row.publishing }}
         </template>
       </el-table-column>
       <el-table-column label="库存" align="center">

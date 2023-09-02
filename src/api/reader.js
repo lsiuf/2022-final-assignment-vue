@@ -46,3 +46,11 @@ export function register(dat) {
     data: dat
   })
 }
+
+export function updatePassword(query) {
+  return request({
+    url: '/reader/updatePassword',
+    method: 'get',
+    params: query
+  })
+}

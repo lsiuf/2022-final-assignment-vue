@@ -1,9 +1,9 @@
 <template>
   <div class="app-container">
     <el-form :inline="true">
-      <el-form-item label="读者卡号">
+      <!-- <el-form-item label="读者卡号">
         <el-input v-model="listParams.readerNumber" style="width:200px" placeholder="请输入读者卡号"></el-input>
-      </el-form-item>
+      </el-form-item> -->
       <el-form-item label="书名">
         <el-input v-model="listParams.bookName" style="width:200px" placeholder="请输入书名"></el-input>
       </el-form-item>
@@ -109,7 +109,7 @@ export default {
     return {
       list: [],
       listParams:{
-        readerNumber: '',
+        // readerNumber: '',
         bookName: '',
         status: ''
       },
