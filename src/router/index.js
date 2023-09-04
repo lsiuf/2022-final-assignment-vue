@@ -171,6 +171,20 @@ export const asyncRoutes = [
     ]
   },
 
+  {
+    path: '/classInfo',
+    component: Layout,
+    meta: { roles: ['admin'] },
+    children: [
+      {
+        path: 'index',
+        name: 'ClassInfo',
+        component: () => import('@/views/class_info/index'),
+        meta: { title: '班级信息管理', icon: 'tree' }
+      }
+    ]
+  },
+
   // 404 page must be placed at the end !!!
   { path: '*', redirect: '/404', hidden: true }
 ];
